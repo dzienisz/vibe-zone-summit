@@ -318,8 +318,9 @@ async fn read_json(req: Request<Incoming>) -> Result<serde_json::Map<String, Val
 }
 
 async fn handle(shared: Arc<Shared>, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, std::convert::Infallible> {
+    let close = !req.headers().contains_key(hyper::header::USER_AGENT);
     let path = req.uri().path();
-    let resp = match path {
+    let mut resp = match path {
         "/feed" | "/health" if req.method() == Method::GET || req.method() == Method::HEAD => {
             if path == "/health" {
                 json(StatusCode::OK, Bytes::from_static(b"{\"status\":\"ok\"}"))
@@ -380,6 +381,9 @@ async fn handle(shared: Arc<Shared>, req: Request<Incoming>) -> Result<Response<
         "/feed" | "/health" | "/posts" | "/like" => err(StatusCode::METHOD_NOT_ALLOWED, "Method not allowed"),
         _ => err(StatusCode::NOT_FOUND, "Not found"),
     };
+    if close {
+        resp.headers_mut().insert(hyper::header::CONNECTION, hyper::header::HeaderValue::from_static("close"));
+    }
     Ok(resp)
 }
 
