@@ -4,7 +4,7 @@ WORKDIR /src
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo 'fn main(){}' > src/main.rs && cargo build --release && rm -rf src target/release/deps/vibezone*
 COPY src ./src
-RUN cargo build --release && mkdir -p /out/data && cp target/release/vibezone-api /out/vibezone-api
+RUN touch src/main.rs && cargo build --release && mkdir -p /out/data && cp target/release/vibezone-api /out/vibezone-api
 
 FROM scratch
 COPY --from=build /out/vibezone-api /vibezone-api
